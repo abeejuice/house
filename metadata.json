@@ -1,0 +1,5 @@
+{
+  "name": "Diagnostic MD",
+  "description": "A case-based learning app based on House M.D. episodes. Test your diagnostic skills with AI-generated medical quizzes.",
+  "requestFramePermissions": []
+}
