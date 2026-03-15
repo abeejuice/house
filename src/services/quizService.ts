@@ -1,79 +1,116 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
 import { Case } from "../data/cases";
-import { staticQuizzes, QuizQuestion } from "../data/quizzes";
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+import {
+  staticQuizzes,
+  QuizQuestion,
+  EnhancedQuizQuestion,
+  DISTANCE_SCORE,
+  DISTANCE_LABEL,
+} from "../data/quizzes";
 
 export type { QuizQuestion, QuizOption } from "../data/quizzes";
+export type { EnhancedQuizQuestion, EnhancedQuizOption } from "../data/quizzes";
 
+// Lazily loaded — avoids bundling 2.7 MB of quiz data on initial page load
+let _enhancedQuizzesCache: Record<string, EnhancedQuizQuestion[]> | null = null;
+
+async function loadEnhancedQuizzes(): Promise<Record<string, EnhancedQuizQuestion[]>> {
+  if (!_enhancedQuizzesCache) {
+    const mod = await import("../data/enhancedQuizzes");
+    _enhancedQuizzesCache = mod.enhancedQuizzes;
+  }
+  return _enhancedQuizzesCache;
+}
+
+/**
+ * Returns enhanced quiz questions (10 PubMed-grounded, NMC-anchored) if available,
+ * falling back to legacy static quizzes, then live AI generation.
+ */
 export async function getQuizForCase(caseData: Case): Promise<QuizQuestion[]> {
-  // Check for static, hand-crafted quiz first
+  // 1. Pre-generated enhanced quizzes (preferred)
+  const quizzes = await loadEnhancedQuizzes();
+  const enhanced = quizzes[caseData.id];
+  if (enhanced && enhanced.length > 0) {
+    return enhanced.map(enhancedToLegacy);
+  }
+
+  // 2. Legacy static quizzes
   if (staticQuizzes[caseData.id]) {
     return staticQuizzes[caseData.id];
   }
 
-  // Fallback to high-quality AI generation if not found
-  const prompt = `
-    You are a Senior Medical Board Examiner and Specialist Physician. 
-    Generate a 5-question clinical diagnostic quiz for the condition: ${caseData.diagnosis}.
-    
-    CRITICAL STANDARDS:
-    - Use high-grade medical terminology (e.g., "pathognomonic", "acroparesthesia", "biliary excretion").
-    - Do NOT mention the diagnosis (${caseData.diagnosis}) in any question or option text.
-    - Follow the "House M.D." style: focus on the "Great Imitator" aspects or subtle clinical traps.
-    
-    THEME (Strict 5-Level Bloom's Taxonomy):
-    1. Question 1: RECALL - Focus on the molecular basis, genetic locus, or primary vector/pathogen.
-    2. Question 2: UNDERSTANDING - Explain the 'Why'. Why does this specific symptom occur? (Pathophysiology).
-    3. Question 3: APPLICATION - A clinical scenario: "A patient with X presents with Y, what is the next best step?"
-    4. Question 4: ANALYSIS - Differentiating from a 'Clinical Mimic' or interpreting a specific lab/imaging finding.
-    5. Question 5: INTUITION - A subtle, "fun" diagnostic clue (e.g., a specific smell, a historical name, or a unique physical sign).
-    
-    OPTION LOGIC (Exactly 4 options):
-    - CORRECT: Medically accurate and precise.
-    - DISTRACTOR: Plausible but incorrect (e.g., seen in a related condition).
-    - COMMON MISCONCEPTION: A trap based on typical diagnostic errors.
-    - WILDLY WRONG: Clearly incorrect but medically themed.
-    
-    Provide a detailed medical explanation for EVERY option.
-  `;
+  // 3. AI generation fallback (Gemini)
+  return generateAIQuiz(caseData);
+}
 
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: prompt,
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.ARRAY,
-        items: {
-          type: Type.OBJECT,
-          properties: {
-            question: { type: Type.STRING },
-            bloomLevel: { type: Type.STRING },
-            options: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  text: { type: Type.STRING },
-                  type: { type: Type.STRING },
-                  explanation: { type: Type.STRING }
-                },
-                required: ["text", "type", "explanation"]
-              }
-            }
-          },
-          required: ["question", "bloomLevel", "options"]
-        }
-      }
-    }
-  });
+/**
+ * Returns enhanced questions directly (for components that use the richer type).
+ */
+export async function getEnhancedQuizForCase(caseData: Case): Promise<EnhancedQuizQuestion[] | null> {
+  const quizzes = await loadEnhancedQuizzes();
+  const enhanced = quizzes[caseData.id];
+  return enhanced && enhanced.length > 0 ? enhanced : null;
+}
 
+// ─── Adapter: EnhancedQuizQuestion → legacy QuizQuestion ──────────────────────
+
+function enhancedToLegacy(q: EnhancedQuizQuestion): QuizQuestion {
+  return {
+    question: q.question,
+    bloomLevel: q.bloomLevel,
+    options: q.options.map(o => ({
+      text: o.text,
+      type: o.type === "correct" ? "correct" : "distractor",
+      explanation: o.explanation,
+    })),
+  };
+}
+
+// ─── Live AI fallback ──────────────────────────────────────────────────────────
+
+async function generateAIQuiz(caseData: Case): Promise<QuizQuestion[]> {
   try {
-    return JSON.parse(response.text);
-  } catch (e) {
-    console.error("Failed to parse quiz response", e);
+    const { GoogleGenAI, Type } = await import("@google/genai");
+    const ai = new GoogleGenAI({ apiKey: (import.meta as any).env?.VITE_GEMINI_API_KEY ?? "" });
+
+    const prompt = `You are a Senior Medical Board Examiner. Generate a 5-question clinical diagnostic quiz for: ${caseData.diagnosis}.
+Do NOT mention the diagnosis in any question or option. Follow Bloom's Taxonomy (Recall→Evaluation).
+Each question has 4 options: correct, distractor, common misconception, wildly wrong.
+Provide a detailed explanation for every option.`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              question: { type: Type.STRING },
+              bloomLevel: { type: Type.STRING },
+              options: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    text: { type: Type.STRING },
+                    type: { type: Type.STRING },
+                    explanation: { type: Type.STRING },
+                  },
+                  required: ["text", "type", "explanation"],
+                },
+              },
+            },
+            required: ["question", "bloomLevel", "options"],
+          },
+        },
+      },
+    });
+
+    return JSON.parse(response.text ?? "[]");
+  } catch {
     return [];
   }
 }

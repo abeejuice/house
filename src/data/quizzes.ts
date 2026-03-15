@@ -1,4 +1,5 @@
 
+// ── Legacy types (kept for backward compat during migration) ──────────────────
 export interface QuizOption {
   text: string;
   type: 'correct' | 'distractor' | 'misconception' | 'wrong';
@@ -9,6 +10,57 @@ export interface QuizQuestion {
   question: string;
   bloomLevel: string;
   options: QuizOption[];
+}
+
+// ── Enhanced types (PubMed-grounded, NMC-linked) ───────────────────────────────
+
+export type EnhancedOptionType = 'correct' | 'similar_wrong' | 'misconception' | 'wildly_wrong';
+
+/** How far the option is from the correct answer (used for weighted scoring & UI labels) */
+export const DISTANCE_SCORE: Record<EnhancedOptionType, 0 | 1 | 2 | 3> = {
+  correct:       0,
+  similar_wrong: 1,
+  misconception: 2,
+  wildly_wrong:  3,
+};
+
+export const DISTANCE_LABEL: Record<EnhancedOptionType, string> = {
+  correct:       'Correct',
+  similar_wrong: 'Close but wrong',
+  misconception: 'Common misconception',
+  wildly_wrong:  'Way off',
+};
+
+export const DISTANCE_COLOR: Record<EnhancedOptionType, string> = {
+  correct:       'text-emerald-400 border-emerald-500/40 bg-emerald-500/5',
+  similar_wrong: 'text-yellow-400  border-yellow-500/40  bg-yellow-500/5',
+  misconception: 'text-orange-400  border-orange-500/40  bg-orange-500/5',
+  wildly_wrong:  'text-rose-400    border-rose-500/40    bg-rose-500/5',
+};
+
+export interface EnhancedQuizOption {
+  text: string;
+  type: EnhancedOptionType;
+  distanceScore: 0 | 1 | 2 | 3;
+  distanceLabel: string;
+  explanation: string;
+}
+
+export interface PubMedSource {
+  pmid: string;
+  title: string;
+  publicationType: string; // e.g. "Systematic Review", "Randomized Controlled Trial", "Review"
+}
+
+export interface EnhancedQuizQuestion {
+  question: string;
+  bloomLevel: string;
+  /** NMC competency code this question tests, e.g. "MI2.5" */
+  competencyCode: string;
+  /** Short display text of the competency */
+  competencyText: string;
+  options: EnhancedQuizOption[];
+  pubmedSource: PubMedSource;
 }
 
 export const staticQuizzes: Record<string, QuizQuestion[]> = {
