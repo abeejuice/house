@@ -1,20 +1,47 @@
 
 import React from 'react';
 import { CaseCard } from './CaseCard';
-import { Case, topInterestingCases } from '../data/cases';
+import { Case, topInterestingCases, cases } from '../data/cases';
 import { motion } from 'motion/react';
 import { TrendingUp, Activity, Brain, HeartPulse, Stethoscope } from 'lucide-react';
+import { useProgress } from '../context/ProgressContext';
 
 interface HomeViewProps {
   onSelectCase: (caseData: Case) => void;
+  onViewAll: () => void;
 }
 
-export const HomeView: React.FC<HomeViewProps> = ({ onSelectCase }) => {
+export const HomeView: React.FC<HomeViewProps> = ({ onSelectCase, onViewAll }) => {
+  const { stats: progressStats } = useProgress();
   const stats = [
-    { icon: Activity, label: 'Active Cases', value: '1,240', color: 'text-emerald-500' },
-    { icon: Brain, label: 'Diagnostic Accuracy', value: '84.2%', color: 'text-[#F27D26]' },
-    { icon: HeartPulse, label: 'Lives Saved', value: '42', color: 'text-rose-500' },
-    { icon: Stethoscope, label: 'Fellows Online', value: '12', color: 'text-blue-500' },
+    {
+      icon: Activity,
+      label: 'Cases Completed',
+      value: progressStats.casesAttempted > 0
+        ? `${progressStats.casesAttempted}/${cases.length}`
+        : '0',
+      color: 'text-emerald-500',
+    },
+    {
+      icon: Brain,
+      label: 'Diagnostic Accuracy',
+      value: progressStats.casesAttempted > 0 ? `${progressStats.avgAccuracyPercent}%` : '—',
+      color: 'text-[#F27D26]',
+    },
+    {
+      icon: HeartPulse,
+      label: 'Points Earned',
+      value: progressStats.casesAttempted > 0
+        ? `${progressStats.totalPointsEarned}`
+        : '0',
+      color: 'text-rose-500',
+    },
+    {
+      icon: Stethoscope,
+      label: 'Total Cases',
+      value: String(cases.length),
+      color: 'text-blue-500',
+    },
   ];
 
   return (
@@ -59,7 +86,10 @@ export const HomeView: React.FC<HomeViewProps> = ({ onSelectCase }) => {
             <span className="px-2 py-1 bg-emerald-500/10 text-emerald-500 text-[10px] font-mono rounded border border-emerald-500/20 uppercase tracking-widest">High Grade Data</span>
           </div>
           <div className="h-px flex-1 mx-8 bg-[#141414]" />
-          <button className="text-xs font-mono text-[#8E9299] hover:text-[#F27D26] transition-colors uppercase tracking-widest">
+          <button
+            onClick={onViewAll}
+            className="text-xs font-mono text-[#8E9299] hover:text-[#F27D26] transition-colors uppercase tracking-widest"
+          >
             View All Cases
           </button>
         </div>

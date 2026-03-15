@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { ChevronRight, Stethoscope, Activity, Brain, HeartPulse, ShieldCheck } from 'lucide-react';
+import { ChevronRight, Stethoscope, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { Case } from '../data/cases';
 import { motion } from 'motion/react';
+import { useProgress } from '../context/ProgressContext';
 
 interface CaseCardProps {
   caseData: Case;
@@ -10,6 +11,12 @@ interface CaseCardProps {
 }
 
 export const CaseCard: React.FC<CaseCardProps> = ({ caseData, onClick }) => {
+  const { all } = useProgress();
+  const progress = all[caseData.id];
+  const scorePercent = progress
+    ? Math.round((progress.earnedPoints / progress.maxPoints) * 100)
+    : null;
+
   return (
     <motion.div
       whileHover={{ scale: 1.02 }}
@@ -28,6 +35,11 @@ export const CaseCard: React.FC<CaseCardProps> = ({ caseData, onClick }) => {
           {caseData.verified && (
             <div className="flex items-center gap-1 text-[9px] font-mono text-emerald-500 uppercase tracking-tighter bg-emerald-500/10 px-1.5 py-0.5 rounded">
               <ShieldCheck className="w-3 h-3" /> Verified
+            </div>
+          )}
+          {scorePercent !== null && (
+            <div className="flex items-center gap-1 text-[9px] font-mono text-[#F27D26] uppercase tracking-tighter bg-[#F27D26]/10 px-1.5 py-0.5 rounded border border-[#F27D26]/20">
+              <CheckCircle2 className="w-3 h-3" /> {scorePercent}%
             </div>
           )}
         </div>

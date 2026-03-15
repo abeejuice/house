@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { CaseCard } from './CaseCard';
 import { Case, cases } from '../data/cases';
 import { motion } from 'motion/react';
 import { Search, Filter, List } from 'lucide-react';
+import { useProgress } from '../context/ProgressContext';
 
 interface SeasonViewProps {
   season: number;
@@ -11,7 +12,20 @@ interface SeasonViewProps {
 }
 
 export const SeasonView: React.FC<SeasonViewProps> = ({ season, onSelectCase }) => {
+  const [query, setQuery] = useState('');
+  const { all } = useProgress();
   const seasonCases = cases.filter(c => c.season === season);
+  const filteredCases = useMemo(() => {
+    const q = query.toLowerCase().trim();
+    if (!q) return seasonCases;
+    return seasonCases.filter(
+      c =>
+        c.episode.toLowerCase().includes(q) ||
+        c.diagnosis.toLowerCase().includes(q) ||
+        c.patient.toLowerCase().includes(q),
+    );
+  }, [seasonCases, query]);
+  const completedCount = seasonCases.filter(c => all[c.id]).length;
 
   return (
     <div className="p-12 max-w-7xl mx-auto">
@@ -24,6 +38,9 @@ export const SeasonView: React.FC<SeasonViewProps> = ({ season, onSelectCase }) 
           <h1 className="text-5xl font-bold text-white tracking-tighter">
             Diagnostic <span className="text-[#F27D26]">Archive.</span>
           </h1>
+          <p className="text-[#8E9299] mt-2 text-sm font-mono">
+            {completedCount}/{seasonCases.length} completed
+          </p>
         </div>
 
         <div className="flex gap-4">
@@ -32,6 +49,8 @@ export const SeasonView: React.FC<SeasonViewProps> = ({ season, onSelectCase }) 
             <input
               type="text"
               placeholder="Search diagnosis..."
+              value={query}
+              onChange={e => setQuery(e.target.value)}
               className="bg-[#151619] border border-[#141414] rounded-xl pl-12 pr-6 py-3 text-sm text-white focus:outline-none focus:border-[#F27D26] transition-all w-64"
             />
           </div>
@@ -42,7 +61,7 @@ export const SeasonView: React.FC<SeasonViewProps> = ({ season, onSelectCase }) 
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {seasonCases.map((caseData, i) => (
+        {filteredCases.map((caseData, i) => (
           <motion.div
             key={caseData.id}
             initial={{ opacity: 0, y: 20 }}

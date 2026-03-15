@@ -8,25 +8,30 @@ import { Sidebar } from './components/Sidebar';
 import { HomeView } from './components/HomeView';
 import { SeasonView } from './components/SeasonView';
 import { QuizView } from './components/QuizView';
+import { AllCasesView } from './components/AllCasesView';
 import { Case } from './data/cases';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function App() {
   const [activeSeason, setActiveSeason] = useState<number | null>(null);
   const [selectedCase, setSelectedCase] = useState<Case | null>(null);
+  const [showAllCases, setShowAllCases] = useState(false);
 
   const handleSelectSeason = (season: number | null) => {
     setActiveSeason(season);
     setSelectedCase(null);
+    setShowAllCases(false);
   };
 
   const handleSelectCase = (caseData: Case) => {
     setSelectedCase(caseData);
+    setShowAllCases(false);
   };
 
   const handleGoHome = () => {
     setActiveSeason(null);
     setSelectedCase(null);
+    setShowAllCases(false);
   };
 
   return (
@@ -52,6 +57,19 @@ export default function App() {
                 onClose={() => setSelectedCase(null)} 
               />
             </motion.div>
+          ) : showAllCases ? (
+            <motion.div
+              key="all-cases"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="w-full"
+            >
+              <AllCasesView
+                onSelectCase={handleSelectCase}
+                onBack={handleGoHome}
+              />
+            </motion.div>
           ) : activeSeason !== null ? (
             <motion.div
               key={`season-${activeSeason}`}
@@ -60,9 +78,9 @@ export default function App() {
               exit={{ opacity: 0, y: -20 }}
               className="w-full"
             >
-              <SeasonView 
-                season={activeSeason} 
-                onSelectCase={handleSelectCase} 
+              <SeasonView
+                season={activeSeason}
+                onSelectCase={handleSelectCase}
               />
             </motion.div>
           ) : (
@@ -73,7 +91,7 @@ export default function App() {
               exit={{ opacity: 0, y: -20 }}
               className="w-full"
             >
-              <HomeView onSelectCase={handleSelectCase} />
+              <HomeView onSelectCase={handleSelectCase} onViewAll={() => setShowAllCases(true)} />
             </motion.div>
           )}
         </AnimatePresence>
