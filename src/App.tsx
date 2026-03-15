@@ -9,6 +9,7 @@ import { HomeView } from './components/HomeView';
 import { SeasonView } from './components/SeasonView';
 import { QuizView } from './components/QuizView';
 import { AllCasesView } from './components/AllCasesView';
+import { KnowledgeGraphView } from './components/KnowledgeGraphView';
 import { Case } from './data/cases';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -16,19 +17,30 @@ export default function App() {
   const [activeSeason, setActiveSeason] = useState<number | null>(null);
   const [selectedCase, setSelectedCase] = useState<Case | null>(null);
   const [showAllCases, setShowAllCases] = useState(false);
+  const [showGraph, setShowGraph] = useState(false);
 
   const handleSelectSeason = (season: number | null) => {
     setActiveSeason(season);
     setSelectedCase(null);
     setShowAllCases(false);
+    setShowGraph(false);
   };
 
   const handleSelectCase = (caseData: Case) => {
     setSelectedCase(caseData);
     setShowAllCases(false);
+    setShowGraph(false);
   };
 
   const handleGoHome = () => {
+    setActiveSeason(null);
+    setSelectedCase(null);
+    setShowAllCases(false);
+    setShowGraph(false);
+  };
+
+  const handleShowGraph = () => {
+    setShowGraph(true);
     setActiveSeason(null);
     setSelectedCase(null);
     setShowAllCases(false);
@@ -36,10 +48,12 @@ export default function App() {
 
   return (
     <div className="flex min-h-screen bg-[#050505] text-white font-sans selection:bg-[#F27D26]/30 selection:text-[#F27D26]">
-      <Sidebar 
-        activeSeason={activeSeason} 
-        onSelectSeason={handleSelectSeason} 
-        onGoHome={handleGoHome} 
+      <Sidebar
+        activeSeason={activeSeason}
+        onSelectSeason={handleSelectSeason}
+        onGoHome={handleGoHome}
+        onShowGraph={handleShowGraph}
+        showGraph={showGraph}
       />
       
       <main className="flex-1 relative overflow-y-auto h-screen">
@@ -56,6 +70,16 @@ export default function App() {
                 caseData={selectedCase} 
                 onClose={() => setSelectedCase(null)} 
               />
+            </motion.div>
+          ) : showGraph ? (
+            <motion.div
+              key="graph"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="w-full h-screen"
+            >
+              <KnowledgeGraphView onSelectCase={handleSelectCase} />
             </motion.div>
           ) : showAllCases ? (
             <motion.div

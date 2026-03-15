@@ -5,6 +5,10 @@ export interface BloomBreakdown {
   [level: string]: { correct: number; total: number };
 }
 
+export interface CompetencyBreakdown {
+  [competencyCode: string]: { correct: number; total: number };
+}
+
 export interface CaseProgress {
   caseId: string;
   earnedPoints: number;
@@ -14,6 +18,7 @@ export interface CaseProgress {
   mode: "enhanced" | "legacy";
   completedAt: string; // ISO 8601
   bloomBreakdown: BloomBreakdown;
+  competencyBreakdown: CompetencyBreakdown;
 }
 
 export interface ProgressStats {

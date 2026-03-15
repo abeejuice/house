@@ -426,11 +426,19 @@ export const QuizView: React.FC<QuizViewProps> = ({ caseData, onClose }) => {
         const earnedPoints = newAnswers.reduce((s, a) => s + optionPoints(a.selected.type), 0);
         const correctCount = newAnswers.filter(a => a.selected.type === 'correct').length;
         const bloomBreakdown: Record<string, { correct: number; total: number }> = {};
+        const competencyBreakdown: Record<string, { correct: number; total: number }> = {};
         for (const a of newAnswers) {
           const lvl = a.question.bloomLevel;
           if (!bloomBreakdown[lvl]) bloomBreakdown[lvl] = { correct: 0, total: 0 };
           bloomBreakdown[lvl].total++;
           if (a.selected.type === 'correct') bloomBreakdown[lvl].correct++;
+
+          const code = a.question.competencyCode;
+          if (code) {
+            if (!competencyBreakdown[code]) competencyBreakdown[code] = { correct: 0, total: 0 };
+            competencyBreakdown[code].total++;
+            if (a.selected.type === 'correct') competencyBreakdown[code].correct++;
+          }
         }
         save({
           caseId: caseData.id,
@@ -441,6 +449,7 @@ export const QuizView: React.FC<QuizViewProps> = ({ caseData, onClose }) => {
           mode: 'enhanced',
           completedAt: new Date().toISOString(),
           bloomBreakdown,
+          competencyBreakdown,
         });
         setShowResult(true);
       }
@@ -601,6 +610,7 @@ export const QuizView: React.FC<QuizViewProps> = ({ caseData, onClose }) => {
           mode: 'legacy',
           completedAt: new Date().toISOString(),
           bloomBreakdown,
+          competencyBreakdown: {}, // legacy questions don't carry competency codes
         });
         setShowResult(true);
       }

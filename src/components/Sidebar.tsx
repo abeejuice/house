@@ -1,15 +1,17 @@
 
 import React from 'react';
-import { LayoutDashboard, List, History, Settings, LogOut, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, List, LogOut, ChevronRight, Network } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface SidebarProps {
   activeSeason: number | null;
   onSelectSeason: (season: number | null) => void;
   onGoHome: () => void;
+  onShowGraph: () => void;
+  showGraph: boolean;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeSeason, onSelectSeason, onGoHome }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ activeSeason, onSelectSeason, onGoHome, onShowGraph, showGraph }) => {
   const seasons = [1, 2, 3, 4, 5, 6, 7, 8];
 
   return (
@@ -30,11 +32,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeSeason, onSelectSeason, 
         <button
           onClick={onGoHome}
           className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-            activeSeason === null ? 'bg-[#151619] text-[#F27D26]' : 'text-[#8E9299] hover:bg-[#151619] hover:text-white'
+            !showGraph && activeSeason === null ? 'bg-[#151619] text-[#F27D26]' : 'text-[#8E9299] hover:bg-[#151619] hover:text-white'
           }`}
         >
           <LayoutDashboard className="w-5 h-5" />
           <span className="text-sm font-medium">Dashboard</span>
+        </button>
+
+        <button
+          onClick={onShowGraph}
+          className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+            showGraph ? 'bg-[#151619] text-[#F27D26]' : 'text-[#8E9299] hover:bg-[#151619] hover:text-white'
+          }`}
+        >
+          <Network className="w-5 h-5" />
+          <span className="text-sm font-medium">Knowledge Map</span>
         </button>
 
         <div className="pt-4 pb-2 px-4">
