@@ -141,7 +141,56 @@ src/
 
 ## Changelog
 
-### v2.0 — Current
+### v2.1 — Current
+
+#### Data quality: PubMed source audit (173 cases reviewed)
+
+A full audit of all `pubmedSource` fields revealed three categories of error, all resolved:
+
+**Category A — Empty/placeholder PMIDs fixed (13 cases)**
+
+| Case | Clinical topic | New source |
+|------|---------------|------------|
+| s1e6 | Wilson's disease | PMID 37311952 — SR + meta-analysis |
+| s3e18 | Methyl bromide toxicity | PMID 23800997 — Review |
+| s3e22 | Caustic ingestion / GI injury | PMID 39982600 — Practice Guideline |
+| s4e6 | Thallium poisoning | PMID 22837270 — EXTRIP Practice Guideline |
+| s4e12 | Nephroptosis | PMID 29637838 — Review |
+| s5e3 | Gastric bezoar | PMID 25901212 — Review |
+| s5e19 | Leptospirosis neurology | PMID 25813883 — Systematic Review |
+| s6e18 | Anabolic steroid adverse effects | PMID 39945139 — SR + meta-analysis |
+| s6e22 | Fat embolism syndrome | PMID 33880141 — Review |
+| s7e7 | Rickettsialpox | PMID 9098640 — Review |
+| s7e18 | Q fever endocarditis | PMID 34052129 — Review |
+| s8e20 | Triclosan / thyroid disruption | PMID 33519715 — SR + meta-analysis |
+| s8e22 | Hypersensitivity pneumonitis | PMID 34370035 — Systematic Review |
+
+**Category B — Confirmed wrong / retracted sources replaced (2 cases)**
+
+| Case | Old PMID | Problem | New source |
+|------|----------|---------|------------|
+| s7e13 | 19454071 | ARDS article assigned to a foreign body aspiration case | PMID 37473440 — SR + meta-analysis on CT for paediatric FBA |
+| s7e22 | 38792919 | Article was **retracted** (periodontal disease) | PMID 39979548 — SR + meta-analysis on amoebic liver abscess |
+
+**Category C — Topic mismatches and weak sources upgraded (5 cases)**
+
+| Case | Old source | Problem | New source |
+|------|-----------|---------|------------|
+| s7e10 | PMID 36433668 — photodermatoses | Case is about variegate porphyria | PMID 27982422 — porphyria review |
+| s7e3 | PMID 33197553 — RhoA inhibitors | Case is about post-traumatic syringomyelia | PMID 12852875 — syringomyelia review |
+| s5e15 | PMID 25906751 — prostate cancer gene | Highly specific gene paper, not a SR | PMID 23527602 — Wiskott-Aldrich SR |
+| s8e1 | PMID 32891740 — veterinary mast cell | Veterinary article (wrong species) | PMID 28770635 — mastocytosis meta-analysis |
+| s7e21 | PMID 8765116 — 1996 case report | Bottom of evidence hierarchy, 30 yrs old | PMID 33047541 — 2020 cantharidin review |
+
+#### Bug fixes — `QuizView.tsx`
+
+- **Fixed crash on missing explanation** — explanation block is now conditionally rendered; previously a missing `explanation` field would throw a runtime error
+- **Fixed premature answer reveal** — option rows no longer colour-code themselves (correct/wrong/close) before an answer is confirmed; this was effectively showing the right answer before the user committed to a choice
+- **Added "Exit Case" button** — `ArrowLeft` back button added to the quiz header so users can leave mid-quiz without needing to know about the separate close control
+
+---
+
+### v2.0
 
 Complete rebuild of the quiz and data layer.
 

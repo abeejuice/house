@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   ChevronRight, CheckCircle2, XCircle, Brain, HeartPulse,
-  Trophy, RotateCcw, BookOpen, ExternalLink, FlaskConical,
+  Trophy, RotateCcw, BookOpen, ExternalLink, FlaskConical, ArrowLeft,
 } from 'lucide-react';
 import { Case } from '../data/cases';
 import { getEnhancedQuizForCase, getQuizForCase, QuizQuestion, QuizOption } from '../services/quizService';
@@ -459,6 +459,12 @@ export const QuizView: React.FC<QuizViewProps> = ({ caseData, onClose }) => {
       <div className="max-w-4xl mx-auto py-12 px-6">
         <div className="flex justify-between items-center mb-8">
           <div>
+            <button
+              onClick={onClose}
+              className="flex items-center gap-2 text-[#8E9299] hover:text-white transition-colors text-xs font-mono uppercase tracking-widest mb-3"
+            >
+              <ArrowLeft className="w-4 h-4" /> Exit Case
+            </button>
             <h2 className="text-2xl font-bold text-white mb-1">Differential Diagnosis</h2>
             <p className="text-[#8E9299] text-sm">Case: {caseData.episode} — {caseData.patient}</p>
           </div>
@@ -503,10 +509,7 @@ export const QuizView: React.FC<QuizViewProps> = ({ caseData, onClose }) => {
             <div className="grid grid-cols-1 gap-4">
               {q.options.map((opt, i) => {
                 const isSelected = sel === opt;
-                const showColors = !!sel;
-                const colorClass = showColors
-                  ? DISTANCE_COLOR[opt.type]
-                  : 'bg-[#151619] border-[#141414] text-[#8E9299] hover:border-[#F27D26] hover:text-white';
+                const colorClass = 'bg-[#151619] border-[#141414] text-[#8E9299] hover:border-[#F27D26] hover:text-white';
 
                 return (
                   <motion.button
@@ -525,18 +528,6 @@ export const QuizView: React.FC<QuizViewProps> = ({ caseData, onClose }) => {
                       </div>
                       <span className="text-lg font-medium">{opt.text}</span>
                     </div>
-                    {showColors && (
-                      <div className="shrink-0 flex items-center gap-2">
-                        <span className={`text-[9px] font-mono uppercase tracking-wider ${DISTANCE_COLOR[opt.type].split(' ')[0]}`}>
-                          {opt.distanceLabel}
-                        </span>
-                        {opt.type === 'correct' ? (
-                          <CheckCircle2 className="w-6 h-6 text-emerald-400" />
-                        ) : isSelected ? (
-                          <XCircle className="w-6 h-6 text-rose-400" />
-                        ) : null}
-                      </div>
-                    )}
                   </motion.button>
                 );
               })}
@@ -549,12 +540,14 @@ export const QuizView: React.FC<QuizViewProps> = ({ caseData, onClose }) => {
                   animate={{ opacity: 1, y: 0 }}
                   className="space-y-6"
                 >
-                  <div className={`p-6 rounded-xl border ${DISTANCE_COLOR[sel.type]}`}>
-                    <h4 className={`text-sm font-bold uppercase tracking-widest mb-2 ${DISTANCE_COLOR[sel.type].split(' ')[0]}`}>
-                      {sel.type === 'correct' ? 'Correct Reasoning' : sel.distanceLabel}
-                    </h4>
-                    <p className="text-[#8E9299] leading-relaxed italic">{sel.explanation}</p>
-                  </div>
+                  {sel.explanation && (
+                    <div className={`p-6 rounded-xl border ${DISTANCE_COLOR[sel.type]}`}>
+                      <h4 className={`text-sm font-bold uppercase tracking-widest mb-2 ${DISTANCE_COLOR[sel.type].split(' ')[0]}`}>
+                        {sel.type === 'correct' ? 'Correct Reasoning' : sel.distanceLabel}
+                      </h4>
+                      <p className="text-[#8E9299] leading-relaxed italic">{sel.explanation}</p>
+                    </div>
+                  )}
 
                   <div className="flex justify-end">
                     <button
@@ -620,6 +613,12 @@ export const QuizView: React.FC<QuizViewProps> = ({ caseData, onClose }) => {
       <div className="max-w-4xl mx-auto py-12 px-6">
         <div className="flex justify-between items-center mb-8">
           <div>
+            <button
+              onClick={onClose}
+              className="flex items-center gap-2 text-[#8E9299] hover:text-white transition-colors text-xs font-mono uppercase tracking-widest mb-3"
+            >
+              <ArrowLeft className="w-4 h-4" /> Exit Case
+            </button>
             <h2 className="text-2xl font-bold text-white mb-1">Differential Diagnosis</h2>
             <p className="text-[#8E9299] text-sm">Case: {caseData.episode} - Patient: {caseData.patient}</p>
           </div>
