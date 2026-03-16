@@ -1,1 +1,10 @@
 @import "tailwindcss";
+
+/* ── Glow card tuning variables ────────────────────────────────────────────── */
+:root {
+  --glow-color-r: 242;
+  --glow-color-g: 125;
+  --glow-color-b: 38;
+  --glow-opacity: 0.13;
+  --glow-radius: 380px;
+}

@@ -66,6 +66,10 @@ The dashboard shows live stats:
 
 "View All Cases" opens a searchable archive of all 182 cases grouped by season. Filter by episode title, diagnosis, or patient name. Each card shows a completion badge once you've finished that case's quiz.
 
+### Pointer-responsive glow cards
+
+Every case card responds to cursor movement with a soft radial glow that appears to originate from inside the card and tracks the pointer using spring physics. Built with `useMotionValue` + `useSpring` + `useTransform` from Motion — zero React re-renders on pointer movement.
+
 ### Interactive Knowledge Map
 
 A force-directed graph of all 182 cases and 13 NMC subject domains. Two interaction modes:
@@ -155,7 +159,35 @@ src/
 
 ## Changelog
 
-### v2.3 — Current
+### v2.4 — Current
+
+#### Pointer-responsive glow on case cards
+
+Added a tactile "internal light source" effect to every `CaseCard`. A soft radial gradient glow appears when the cursor enters a card, tracks the pointer position in real time using spring physics, and fades out cleanly when the cursor leaves.
+
+**How it works:**
+- `useMotionValue` tracks the raw pixel offset of the cursor from the card center (x and y)
+- `useSpring` (stiffness 200, damping 25) smooths the movement so the glow follows with natural lag rather than snapping
+- `useTransform` derives a `radial-gradient` CSS string from the spring values, repositioning the gradient centre to match the cursor percentage within the card
+- A separate opacity spring (`glowOpacity`) starts at 0, animates to 1 on `pointerenter`, and back to 0 on `pointerleave` — so the glow fades in and out rather than abruptly appearing or persisting after hover
+
+**Performance:**
+- All MotionValues live outside React state — pointer movement causes zero component re-renders
+- `getBoundingClientRect` is a read-only DOM query (no layout write), called per `pointermove` event scoped to one card
+- `overflow: hidden` + `isolation: isolate` on the card root clips the glow and prevents z-index bleed
+- Glow layer skipped entirely on touch-only devices (`window.matchMedia('(hover: hover)')`) — no regression on mobile
+
+**Tunable via CSS variables in `src/index.css`:**
+
+| Variable | Default | Effect |
+|---|---|---|
+| `--glow-color-r/g/b` | `242 125 38` (orange) | Glow colour channels |
+| `--glow-opacity` | `0.13` | Peak glow intensity |
+| `--glow-radius` | `380px` | Spread of the radial gradient |
+
+---
+
+### v2.3
 
 #### Quiz engine — option shuffle, draft/submit flow, results differentiation
 
