@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { LayoutDashboard, List, LogOut, ChevronRight, Network } from 'lucide-react';
+import { LayoutDashboard, List, ChevronRight, Network } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface SidebarProps {
@@ -69,24 +69,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeSeason, onSelectSeason, 
           </button>
         ))}
       </nav>
-
-      <div className="p-4 border-t border-[#141414]">
-        <div className="bg-[#151619] rounded-xl p-4">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#F27D26] to-[#FF4444] flex items-center justify-center text-white font-bold">
-              MD
-            </div>
-            <div>
-              <p className="text-sm font-medium text-white">Fellow</p>
-              <p className="text-[10px] font-mono text-[#8E9299]">Princeton-Plainsboro</p>
-            </div>
-          </div>
-          <button className="w-full flex items-center justify-center gap-2 py-2 text-xs font-medium text-[#8E9299] hover:text-white transition-colors">
-            <LogOut className="w-4 h-4" />
-            Sign Out
-          </button>
-        </div>
-      </div>
     </div>
   );
 };

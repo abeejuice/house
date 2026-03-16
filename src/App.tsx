@@ -56,7 +56,7 @@ export default function App() {
         showGraph={showGraph}
       />
       
-      <main className="flex-1 relative overflow-y-auto h-screen">
+      <main className="flex-1 relative overflow-y-auto h-screen bg-[#050505]">
         <AnimatePresence mode="wait">
           {selectedCase ? (
             <motion.div

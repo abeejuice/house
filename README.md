@@ -159,7 +159,21 @@ src/
 
 ## Changelog
 
-### v2.4 — Current
+### v2.5 — Current
+
+#### Bug fixes — layout & sidebar
+
+**White patch at bottom of screen**
+
+Scrolling to the bottom of any long page (Home, Season views) revealed a white strip below the content. Root cause: `<main>` in `App.tsx` lacked an explicit background colour, so the browser's default white page background showed through the dark `#050505` root when the scrollable content area ended above the viewport floor. Fixed by adding `bg-[#050505]` to the `<main>` element.
+
+**Removed decorative sidebar profile block**
+
+The bottom-left corner of the sidebar contained a non-functional "MD" avatar, "Fellow" label, "Princeton-Plainsboro" subtitle, and a Sign Out button with no backing logic. Removed entirely from `Sidebar.tsx` along with the now-unused `LogOut` import.
+
+---
+
+### v2.4
 
 #### Pointer-responsive glow on case cards
 
