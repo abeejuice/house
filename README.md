@@ -159,7 +159,42 @@ src/
 
 ## Changelog
 
-### v2.6 — Current
+### v2.7 — Current
+
+#### House's Verdict panel — 57 accuracy-range taunts
+
+Replaced the "Diagnostic Accuracy" and "Points Earned" stat cards with a dynamic **Dr. House's Verdict** panel. The card reads your overall accuracy and delivers an in-character House MD taunt from a pool of 57 quotes across six accuracy bands.
+
+**Accuracy ranges:**
+
+| Range | Tone |
+|---|---|
+| 0 cases | Cold dismissal — "A blank chart. The only diagnosis I can make is a severe case of inaction." |
+| 1–30% | Brutal — "I've seen better diagnostic reasoning from a Magic 8-Ball. And it's cheaper." |
+| 31–50% | Resigned — "You're getting warmer. The way Antarctica is getting warmer — technically true, not useful." |
+| 51–70% | Backhanded — "You're passing. Not thriving. Just passing. Like a kidney stone." |
+| 71–85% | Grudging respect — "Don't get cocky. It's probably still lupus." |
+| 86–100% | Reluctant compliment — "...I'm mildly disgusted by how right you are." |
+
+**Animation behaviour (three phases):**
+
+1. **Scan** (~1.4 s on mount): monospace label rapidly cycles through differential terms (`LUPUS... SARCOIDOSIS... VASCULITIS...`)
+2. **Typewriter**: the selected quote types out character-by-character with a blinking cursor
+3. **Idle**: quote sits static; auto-fades to the next quote every 8 seconds — pauses on hover
+
+Tap the `→` button or click/tap the card in idle phase to manually advance to the next quote.
+
+**Performance & accessibility:**
+- Zero new dependencies — uses existing `motion/react`
+- `prefers-reduced-motion`: scan and typewriter skipped; quote appears instantly; no auto-cycle
+- Hover pauses auto-cycle via a `useRef` flag (no re-renders)
+- All `setInterval` / `setTimeout` instances cleaned up on unmount
+
+**Layout:** The two removed cards are replaced by the verdict panel spanning 2 columns (`md:col-span-2 lg:col-span-2`) alongside the retained "Cases Completed" and "Total Cases" cards.
+
+---
+
+### v2.6
 
 #### GalenAI branding + site rename
 
