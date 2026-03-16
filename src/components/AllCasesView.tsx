@@ -40,7 +40,7 @@ export const AllCasesView: React.FC<AllCasesViewProps> = ({ onSelectCase, onBack
   const completedTotal = Object.keys(all).length;
 
   return (
-    <div className="p-12 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 md:p-8 lg:p-12 max-w-7xl mx-auto">
       <header className="mb-12">
         <button
           onClick={onBack}
@@ -55,21 +55,21 @@ export const AllCasesView: React.FC<AllCasesViewProps> = ({ onSelectCase, onBack
         </div>
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <h1 className="text-5xl font-bold text-white tracking-tighter">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white tracking-tighter">
               Case <span className="text-[#F27D26]">Archive.</span>
             </h1>
             <p className="text-[#8E9299] mt-2">
               {completedTotal} / {cases.length} completed
             </p>
           </div>
-          <div className="relative group">
+          <div className="relative group w-full md:w-auto">
             <Search className="w-4 h-4 text-[#8E9299] absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-[#F27D26] transition-colors" />
             <input
               type="text"
               placeholder="Search episode, diagnosis, patient..."
               value={query}
               onChange={e => setQuery(e.target.value)}
-              className="bg-[#151619] border border-[#141414] rounded-xl pl-12 pr-6 py-3 text-sm text-white focus:outline-none focus:border-[#F27D26] transition-all w-80"
+              className="w-full sm:w-80 bg-[#151619] border border-[#141414] rounded-xl pl-12 pr-6 py-3 text-sm text-white focus:outline-none focus:border-[#F27D26] transition-all"
             />
           </div>
         </div>

@@ -66,7 +66,7 @@ export const CaseCard: React.FC<CaseCardProps> = ({ caseData, onClick }) => {
   return (
     <motion.div
       ref={ref}
-      whileHover={{ scale: 1.02 }}
+      whileHover={hasHover ? { scale: 1.02 } : undefined}
       whileTap={{ scale: 0.98 }}
       onClick={() => onClick(caseData)}
       onPointerEnter={hasHover ? handlePointerEnter : undefined}

@@ -212,13 +212,13 @@ export const HomeView: React.FC<HomeViewProps> = ({ onSelectCase, onViewAll }) =
   ];
 
   return (
-    <div className="p-12 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 md:p-8 lg:p-12 max-w-7xl mx-auto">
       <header className="mb-16">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="w-4 h-4 text-[#F27D26]" />
           <span className="text-[10px] font-mono text-[#F27D26] uppercase tracking-widest">Diagnostic Dashboard</span>
         </div>
-        <h1 className="text-6xl font-bold text-white tracking-tighter mb-6">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white tracking-tighter mb-6">
           Welcome back, <span className="text-[#F27D26]">Fellow.</span>
         </h1>
         <p className="text-[#8E9299] text-xl max-w-2xl leading-relaxed">

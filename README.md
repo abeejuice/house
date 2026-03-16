@@ -159,7 +159,36 @@ src/
 
 ## Changelog
 
-### v2.8 — Current
+### v2.9 — Current
+
+#### Mobile responsiveness overhaul
+
+The app was desktop-first with no mobile support. Six categories of issues fixed across six files.
+
+**Sidebar — slide-in overlay on mobile**
+
+On phones (`< md` breakpoint) the sidebar is now hidden off-screen and toggled via a hamburger `☰` button in a sticky top bar. Tapping any nav item, season, or the dark scrim behind the sidebar closes it. On desktop (`md+`) the sidebar stays always-visible as before. iOS scroll lock (`overflow: hidden` on `<body>`) prevents background scrolling while the overlay is open.
+
+**Case card scale glitch on touch**
+
+`whileHover={{ scale: 1.02 }}` was firing on tap and sticking — making tapped cards appear enlarged while untapped cards looked smaller. Fixed by guarding with the existing `hasHover` flag (already used for the glow layer): `whileHover={hasHover ? { scale: 1.02 } : undefined}`.
+
+**Responsive padding**
+
+All views (`HomeView`, `SeasonView`, `AllCasesView`) changed from flat `p-12` to `p-4 sm:p-6 md:p-8 lg:p-12`.
+
+**Responsive headings**
+
+- HomeView `h1`: `text-3xl sm:text-4xl md:text-5xl lg:text-6xl`
+- SeasonView / AllCasesView `h1`: `text-2xl sm:text-3xl md:text-4xl lg:text-5xl`
+
+**Search inputs**
+
+Fixed-width `w-64` / `w-80` inputs changed to `w-full sm:w-64` / `w-full sm:w-80` — full width on mobile, constrained on larger screens. SeasonView search header switches from a rigid `flex` row to `flex-col gap-3 sm:flex-row`.
+
+---
+
+### v2.8
 
 #### Best Season stat card
 
