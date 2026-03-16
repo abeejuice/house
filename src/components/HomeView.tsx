@@ -3,7 +3,7 @@ import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react'
 import { CaseCard } from './CaseCard';
 import { Case, cases } from '../data/cases';
 import { motion, AnimatePresence } from 'motion/react';
-import { TrendingUp, Activity, Stethoscope, Brain, ChevronRight } from 'lucide-react';
+import { TrendingUp, Activity, Brain, ChevronRight } from 'lucide-react';
 import { useProgress } from '../context/ProgressContext';
 import { getRecommendedCases } from '../services/graphBuilder';
 import { houseQuotes, getAccuracyRange } from '../data/houseQuotes';
@@ -169,6 +169,27 @@ export const HomeView: React.FC<HomeViewProps> = ({ onSelectCase, onViewAll }) =
     [all]
   );
 
+  const bestSeason = useMemo(() => {
+    const entries = Object.entries(all);
+    if (entries.length === 0) return null;
+    const bySeason: Record<number, { earned: number; possible: number; count: number }> = {};
+    for (const [key, progress] of entries) {
+      const season = parseInt(key.slice(1, key.indexOf('e')));
+      if (!bySeason[season]) bySeason[season] = { earned: 0, possible: 0, count: 0 };
+      bySeason[season].earned += progress.earnedPoints;
+      bySeason[season].possible += progress.maxPoints;
+      bySeason[season].count += 1;
+    }
+    let bestS = -1, bestAcc = -1, bestCount = 0;
+    for (const [s, data] of Object.entries(bySeason)) {
+      const acc = data.possible > 0 ? Math.round((data.earned / data.possible) * 100) : 0;
+      if (acc > bestAcc || (acc === bestAcc && data.count > bestCount)) {
+        bestAcc = acc; bestS = parseInt(s); bestCount = data.count;
+      }
+    }
+    return bestS > 0 ? { season: bestS, accuracy: bestAcc, count: bestCount } : null;
+  }, [all]);
+
   const stats = [
     {
       icon: Activity,
@@ -177,12 +198,16 @@ export const HomeView: React.FC<HomeViewProps> = ({ onSelectCase, onViewAll }) =
         ? `${progressStats.casesAttempted}/${cases.length}`
         : '0',
       color: 'text-emerald-500',
+      subtitle: undefined as string | undefined,
     },
     {
-      icon: Stethoscope,
-      label: 'Total Cases',
-      value: String(cases.length),
+      icon: TrendingUp,
+      label: 'Best Season',
+      value: bestSeason ? `Season ${bestSeason.season}` : '—',
       color: 'text-blue-500',
+      subtitle: bestSeason
+        ? `${bestSeason.accuracy}% avg · ${bestSeason.count} case${bestSeason.count !== 1 ? 's' : ''}`
+        : undefined,
     },
   ];
 
@@ -217,6 +242,9 @@ export const HomeView: React.FC<HomeViewProps> = ({ onSelectCase, onViewAll }) =
               <span className="text-[10px] font-mono text-[#8E9299] uppercase tracking-widest">{stat.label}</span>
             </div>
             <p className="text-3xl font-bold text-white">{stat.value}</p>
+            {stat.subtitle && (
+              <p className="text-[11px] font-mono text-[#8E9299] mt-1">{stat.subtitle}</p>
+            )}
           </motion.div>
         ))}
 

@@ -159,7 +159,15 @@ src/
 
 ## Changelog
 
-### v2.7 — Current
+### v2.8 — Current
+
+#### Best Season stat card
+
+Replaced the static "Total Cases: 182" card with a personalised **Best Season** card. It computes your highest-accuracy season across all attempted cases and displays the season number, average accuracy, and case count — e.g. `Season 3 · 84% avg · 8 cases`. New users see `—` until they attempt cases. Tie-breaks by most cases attempted.
+
+---
+
+### v2.7
 
 #### House's Verdict panel — 57 accuracy-range taunts
 
