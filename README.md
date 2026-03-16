@@ -66,6 +66,20 @@ The dashboard shows live stats:
 
 "View All Cases" opens a searchable archive of all 182 cases grouped by season. Filter by episode title, diagnosis, or patient name. Each card shows a completion badge once you've finished that case's quiz.
 
+### Interactive Knowledge Map
+
+A force-directed graph of all 182 cases and 13 NMC subject domains. Two interaction modes:
+
+- **Subject-click (orange)** — focus a subject hub to see all cases that touch it; active edges glow and widen
+- **Case-click (indigo)** — select any case satellite to see which subjects it covers, highlighted in a distinct indigo colour
+- **Edge hover** — hovering any edge shows the NMC competency code and description that connects that case to that subject
+
+### Adaptive home screen recommendations
+
+The dashboard's case grid is dynamic:
+- **New users** see a curated starter set of 6 high-interest cases
+- **Returning users** see 6 cases from their weakest subject area, ranked untried-first then by lowest score — so the hardest gap always surfaces to the top
+
 ---
 
 ## Tech stack
@@ -141,7 +155,52 @@ src/
 
 ## Changelog
 
-### v2.1 — Current
+### v2.2 — Current
+
+#### Knowledge Map — bidirectional selection & edge tooltips
+
+The Knowledge Map now has a full two-mode interaction model and competency-aware edges.
+
+**Subject-click mode (orange)**
+- Clicking a subject hub focuses it: connected case satellites stay fully lit, all others fade to near-invisible (0.05 alpha, down from 0.08 for stronger contrast)
+- Active edges glow at **0.7 alpha and 2 px width** (was flat 0.15/0.5 px) so the connections are clearly visible
+- The focused hub gets a bright outline ring to confirm selection; click again to deselect
+
+**Case-click mode (indigo) — new**
+- Clicking any case satellite now highlights that case plus its connected subject hubs in **indigo** — a distinct colour from the orange subject-focus mode so the two states are never confused
+- The selected case gets a layered indigo glow ring; connected subjects get a softer indigo halo
+- Active edges turn indigo at 0.7 alpha; unrelated nodes fade away
+
+**Edge hover tooltips — new**
+- Hovering any visible edge now shows a pill tooltip positioned at the midpoint of that edge
+- Tooltip displays the NMC competency code (e.g. `IM17.13`) and its full description text (e.g. "Describe the pharmacology, dose, adverse reactions and regimens of drugs used in the treatment of bacterial, tubercular and viral meningitis")
+- This makes explicit *why* a case is connected to a subject — not just that it is
+
+**GraphLink data enrichment**
+- `GraphLink` now carries `competencyCode` and `competencyText` fields populated at graph-build time from the first competency entry that creates each case→subject edge
+- These fields power the edge tooltips without any runtime lookup
+
+**Focus indicator pill**
+- The top-right pill now shows subject name (orange) or episode name (indigo) depending on the active mode, with a single ✕ button that clears both states
+
+---
+
+#### Home screen — adaptive case recommendations
+
+The "Start Here" section on the dashboard is no longer a static hard-coded list.
+
+**New users (0 cases attempted)**
+- Section title: **"Start Here"** with a green "High Grade Data" badge
+- Shows the existing curated starter set of 6 cases (unchanged experience for first-time users)
+
+**Returning users (1+ cases attempted)**
+- Section title: **"Targeted Practice"** with a rose **"Weakest: [Subject]"** badge identifying the specific subject area with the lowest accuracy across all attempted cases
+- Cards show the top 6 cases from that weakest subject, sorted untried-first then by lowest accuracy — so you always see the most relevant gap in your knowledge
+- Implemented via a new exported `getRecommendedCases()` function in `graphBuilder.ts`, which reuses the existing private `subjectAccuracyMap` and `casesForSubject` helpers
+
+---
+
+### v2.1
 
 #### Data quality: PubMed source audit (173 cases reviewed)
 
