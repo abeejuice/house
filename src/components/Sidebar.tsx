@@ -18,10 +18,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeSeason, onSelectSeason, 
     <div className="w-64 bg-[#050505] border-r border-[#141414] flex flex-col h-screen sticky top-0">
       <div className="p-8" onClick={onGoHome} style={{ cursor: 'pointer' }}>
         <h1 className="text-2xl font-bold text-white tracking-tighter flex items-center gap-2">
-          <div className="w-8 h-8 bg-[#F27D26] rounded flex items-center justify-center">
-            <span className="text-black font-black">H</span>
-          </div>
-          DIAGNOSTIC
+          <img src="/galen-icon.svg" className="w-8 h-8 rounded" alt="GalenAI" />
+          IT'S NOT LUPUS
         </h1>
         <p className="text-[10px] font-mono text-[#8E9299] mt-1 tracking-[0.2em] uppercase">
           Case-Based Learning
@@ -69,6 +67,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeSeason, onSelectSeason, 
           </button>
         ))}
       </nav>
+      <div className="p-4 border-t border-[#141414] flex items-center justify-center">
+        <img src="/galen-wordmark.svg" className="h-5 opacity-60" alt="GalenAI" />
+      </div>
     </div>
   );
 };

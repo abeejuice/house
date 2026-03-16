@@ -159,7 +159,26 @@ src/
 
 ## Changelog
 
-### v2.5 — Current
+### v2.6 — Current
+
+#### GalenAI branding + site rename
+
+**Site renamed to "It's Not Lupus"**
+
+The app is now called *It's Not Lupus* — a nod to the most iconic running joke in House MD and the diagnostic instinct the show (and this quiz) tries to build. Browser tab reads "It's Not Lupus | GalenAI".
+
+**GalenAI logo integrated**
+
+GalenAI — the company that built this app — is now represented in two places:
+
+- **Sidebar header**: The placeholder "H" square is replaced with the GalenAI icon mark (the stylised anatomical `G` in `#eb602d` orange-red), next to the new site name
+- **Sidebar footer**: A subtle GalenAI full wordmark sits at the bottom of the sidebar at 60% opacity, serving as a clean attribution without competing with the navigation
+
+Both SVG assets (`galen-icon.svg`, `galen-wordmark.svg`) are served from `public/` as static files.
+
+---
+
+### v2.5
 
 #### Bug fixes — layout & sidebar
 
