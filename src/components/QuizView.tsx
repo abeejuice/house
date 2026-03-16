@@ -28,6 +28,16 @@ function optionPoints(type: string): number {
   return POINTS[type] ?? 0;
 }
 
+// ─── Fisher-Yates shuffle ─────────────────────────────────────────────────────
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 // ─── Enhanced mode types ──────────────────────────────────────────────────────
 
 type EnhancedAnswer = {
@@ -171,7 +181,11 @@ const EnhancedResults: React.FC<{
           const pts = optionPoints(ans.selected.type);
           const isCorrect = ans.selected.type === 'correct';
           return (
-            <div key={i} className="bg-[#151619] border border-[#141414] rounded-xl p-6">
+            <div key={i} className={`rounded-xl p-6 border ${
+              isCorrect
+                ? 'bg-emerald-500/5 border-emerald-500/30'
+                : 'bg-rose-500/5 border-rose-500/50'
+            }`}>
               <div className="flex items-start gap-4 mb-4">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
                   isCorrect ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'
@@ -329,13 +343,15 @@ export const QuizView: React.FC<QuizViewProps> = ({ caseData, onClose }) => {
   // Shared state
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<EnhancedQuizOption | QuizOption | null>(null);
+  const [draftOption, setDraftOption] = useState<EnhancedQuizOption | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     getEnhancedQuizForCase(caseData).then(enhanced => {
       if (enhanced && enhanced.length > 0) {
-        setEnhancedQuestions(enhanced);
+        const randomized = enhanced.map(q => ({ ...q, options: shuffleArray(q.options) }));
+        setEnhancedQuestions(randomized);
         setMode('enhanced');
         setLoading(false);
         return;
@@ -353,6 +369,7 @@ export const QuizView: React.FC<QuizViewProps> = ({ caseData, onClose }) => {
     setShowResult(false);
     setCurrentIndex(0);
     setSelectedOption(null);
+    setDraftOption(null);
     setEnhancedAnswers([]);
     setLegacyScore(0);
     setLegacyAnswers([]);
@@ -411,12 +428,18 @@ export const QuizView: React.FC<QuizViewProps> = ({ caseData, onClose }) => {
     const sel = selectedOption as EnhancedQuizOption | null;
 
     const handleSelect = (opt: EnhancedQuizOption) => {
-      if (sel) return;
-      setSelectedOption(opt);
+      if (sel) return; // locked after submission
+      setDraftOption(opt);
+    };
+
+    const handleSubmit = () => {
+      if (!draftOption || sel) return;
+      setSelectedOption(draftOption);
     };
 
     const handleNext = () => {
       const newAnswers = [...enhancedAnswers, { question: q, selected: sel! }];
+      setDraftOption(null);
       setEnhancedAnswers(newAnswers);
       if (currentIndex < enhancedQuestions.length - 1) {
         setCurrentIndex(currentIndex + 1);
@@ -508,8 +531,12 @@ export const QuizView: React.FC<QuizViewProps> = ({ caseData, onClose }) => {
 
             <div className="grid grid-cols-1 gap-4">
               {q.options.map((opt, i) => {
-                const isSelected = sel === opt;
-                const colorClass = 'bg-[#151619] border-[#141414] text-[#8E9299] hover:border-[#F27D26] hover:text-white';
+                const isDraft = !sel && draftOption === opt;
+                const colorClass = sel
+                  ? 'bg-[#151619] border-[#141414] text-[#8E9299]'  // locked — existing DISTANCE_COLOR shown in explanation
+                  : isDraft
+                  ? 'bg-[#1e1e24] border-[#F27D26]/60 text-white'   // draft selected — orange border, no reveal
+                  : 'bg-[#151619] border-[#141414] text-[#8E9299] hover:border-[#F27D26] hover:text-white';
 
                 return (
                   <motion.button
@@ -522,7 +549,7 @@ export const QuizView: React.FC<QuizViewProps> = ({ caseData, onClose }) => {
                   >
                     <div className="flex items-center gap-4">
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-mono text-sm border ${
-                        isSelected ? 'border-white/20' : 'border-[#141414] group-hover:border-[#F27D26]/50'
+                        isDraft ? 'border-[#F27D26]/60' : 'border-[#141414] group-hover:border-[#F27D26]/50'
                       }`}>
                         {String.fromCharCode(65 + i)}
                       </div>
@@ -532,6 +559,25 @@ export const QuizView: React.FC<QuizViewProps> = ({ caseData, onClose }) => {
                 );
               })}
             </div>
+
+            {/* Submit button — visible only when a draft is selected but not yet locked */}
+            <AnimatePresence>
+              {draftOption && !sel && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 8 }}
+                  className="flex justify-end"
+                >
+                  <button
+                    onClick={handleSubmit}
+                    className="px-10 py-4 bg-[#F27D26] text-black font-bold rounded-xl hover:bg-[#FF8B3D] transition-all flex items-center gap-2 shadow-lg shadow-[#F27D26]/20"
+                  >
+                    Submit Answer <ChevronRight className="w-5 h-5" />
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <AnimatePresence>
               {sel && (

@@ -155,7 +155,44 @@ src/
 
 ## Changelog
 
-### v2.2 — Current
+### v2.3 — Current
+
+#### Quiz engine — option shuffle, draft/submit flow, results differentiation
+
+**Bug fix: answer was always Option A**
+
+Every question in `enhancedQuizzes.ts` stores the correct option at index 0. Since React renders arrays in order, the right answer was permanently locked to the first position. Fixed with a Fisher-Yates shuffle applied once per quiz session when questions load:
+
+```ts
+const randomized = enhanced.map(q => ({ ...q, options: shuffleArray(q.options) }));
+```
+
+Options are shuffled into a random order (A/B/C/D) on every quiz attempt. Scoring is unaffected — the grading logic checks `opt.type` (`"correct"`, `"similar_wrong"`, etc.), not array position.
+
+**UX fix: accidental clicks were immediately final**
+
+Previously a single click instantly locked the answer, showed the explanation, and disabled all other buttons with no way to reconsider. Replaced with a two-stage draft/submit flow (enhanced mode only):
+
+| Stage | Behaviour |
+|---|---|
+| Click an option | Orange border highlight on selected option — other options still clickable and changeable |
+| Click a different option | Highlight moves, no penalty |
+| Click "Submit Answer" | Answer locks in, explanation animates in, Next/View Results button appears |
+
+The existing `selectedOption` state is now the *locked* answer. A new `draftOption` state tracks the tentative selection before submission.
+
+**UX improvement: results page visual differentiation**
+
+The per-question review cards in the results screen previously looked identical regardless of outcome. Now:
+
+- **Correct answers** → subtle emerald border + background (`border-emerald-500/30 bg-emerald-500/5`) — confirms correct reasoning at a glance
+- **Wrong answers** → heavy rose border + background (`border-rose-500/50 bg-rose-500/5`) — immediately scannable while scrolling; expands into the existing split-pane "Your Answer / Correct Answer" layout
+
+The split-pane layout for wrong answers was already implemented; this change makes the outer card visually signal the outcome so users can speed-scroll the review and stop only at their mistakes.
+
+---
+
+### v2.2
 
 #### Knowledge Map — bidirectional selection & edge tooltips
 
