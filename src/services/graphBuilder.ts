@@ -19,7 +19,7 @@
  *   ≥ 80%    → emerald green
  */
 
-import { Case } from "../data/cases";
+import { Case, topInterestingCases } from "../data/cases";
 import { competencyMap } from "../data/competencyMap";
 import { CaseProgress } from "./progressService";
 
@@ -48,6 +48,8 @@ export interface GraphLink {
   source: string;
   target: string;
   color: string;
+  competencyCode: string;   // First competency code that links this case → subject
+  competencyText: string;   // Human-readable description for edge tooltip
 }
 
 export interface GraphData {
@@ -156,6 +158,8 @@ export function buildGraph(
           source: `case::${c.id}`,
           target: `subject::${entry.subject}`,
           color: accuracyColor(accuracy, 0.15),
+          competencyCode: entry.code,
+          competencyText: entry.text,
         });
       }
     }
@@ -190,4 +194,49 @@ export function casesForSubject(
     const accB = pb.earnedPoints / pb.maxPoints;
     return accA - accB; // lowest accuracy first
   });
+}
+
+/**
+ * Returns up to 6 recommended cases for the home screen.
+ *
+ * New users (0 attempts): return the curated starter set.
+ * Returning users: find the subject with the lowest accuracy, surface its
+ * untried/weakest cases first via casesForSubject().
+ */
+export function getRecommendedCases(
+  allCases: Case[],
+  all: Record<string, CaseProgress>,
+): { cases: Case[]; weakestSubject: string | null } {
+  if (Object.keys(all).length === 0) {
+    return { cases: topInterestingCases, weakestSubject: null };
+  }
+
+  // Build code → subject lookup
+  const codeToSubject: Record<string, string> = {};
+  for (const entries of Object.values(competencyMap)) {
+    for (const e of entries) {
+      codeToSubject[e.code] = e.subject;
+    }
+  }
+
+  const subjectAcc = subjectAccuracyMap(all, codeToSubject);
+
+  // Find the subject with the lowest accuracy (only subjects with ≥1 attempt)
+  let weakestSubject: string | null = null;
+  let lowestAcc = Infinity;
+  for (const [subject, agg] of Object.entries(subjectAcc)) {
+    if (agg.total === 0) continue;
+    const acc = agg.correct / agg.total;
+    if (acc < lowestAcc) {
+      lowestAcc = acc;
+      weakestSubject = subject;
+    }
+  }
+
+  if (!weakestSubject) {
+    return { cases: topInterestingCases, weakestSubject: null };
+  }
+
+  const ranked = casesForSubject(weakestSubject, allCases, all);
+  return { cases: ranked.slice(0, 6), weakestSubject };
 }

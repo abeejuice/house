@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { NetworkIcon, X, ChevronRight, AlertTriangle, CheckCircle2, Zap } from "lucide-react";
 import { Case, cases } from "../data/cases";
 import { useProgress } from "../context/ProgressContext";
-import { buildGraph, casesForSubject, GraphNode } from "../services/graphBuilder";
+import { buildGraph, casesForSubject, GraphNode, GraphLink } from "../services/graphBuilder";
 
 interface KnowledgeGraphViewProps {
   onSelectCase: (c: Case) => void;
@@ -137,6 +137,12 @@ const Header: React.FC<{ completedCount: number }> = ({ completedCount }) => (
   </div>
 );
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function resolveId(val: unknown): string {
+  return typeof val === "object" && val !== null ? (val as GraphNode).id : val as string;
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export const KnowledgeGraphView: React.FC<KnowledgeGraphViewProps> = ({ onSelectCase }) => {
@@ -145,6 +151,8 @@ export const KnowledgeGraphView: React.FC<KnowledgeGraphViewProps> = ({ onSelect
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [tooltip, setTooltip] = useState<{ node: GraphNode; x: number; y: number } | null>(null);
   const [focusedSubject, setFocusedSubject] = useState<string | null>(null);
+  const [selectedCase, setSelectedCase] = useState<string | null>(null);
+  const [hoveredLink, setHoveredLink] = useState<{ link: GraphLink; x: number; y: number } | null>(null);
 
   const { all } = useProgress();
 
@@ -163,39 +171,68 @@ export const KnowledgeGraphView: React.FC<KnowledgeGraphViewProps> = ({ onSelect
     return () => obs.disconnect();
   }, []);
 
-  // Nodes visible in the current focus state
+  // Nodes visible in the current focus/selection state
   const visibleSet = useMemo(() => {
-    if (!focusedSubject) return null;
-    const subjectId = `subject::${focusedSubject}`;
-    const connectedCases = new Set<string>();
-    for (const link of graphData.links) {
-      const src = typeof link.source === "object" ? (link.source as GraphNode).id : link.source;
-      const tgt = typeof link.target === "object" ? (link.target as GraphNode).id : link.target;
-      if (tgt === subjectId) connectedCases.add(src);
+    // Mode 1: subject focused — hub + connected case satellites
+    if (focusedSubject) {
+      const subjectId = `subject::${focusedSubject}`;
+      const visible = new Set<string>();
+      for (const link of graphData.links) {
+        const src = resolveId(link.source);
+        const tgt = resolveId(link.target);
+        if (tgt === subjectId) visible.add(src);
+      }
+      visible.add(subjectId);
+      return visible;
     }
-    connectedCases.add(subjectId);
-    return connectedCases;
-  }, [focusedSubject, graphData]);
+    // Mode 2: case selected — case + its connected subject hubs
+    if (selectedCase) {
+      const caseId = `case::${selectedCase}`;
+      const visible = new Set<string>([caseId]);
+      for (const link of graphData.links) {
+        const src = resolveId(link.source);
+        const tgt = resolveId(link.target);
+        if (src === caseId) visible.add(tgt);
+      }
+      return visible;
+    }
+    return null;
+  }, [focusedSubject, selectedCase, graphData]);
 
   const handleNodeClick = useCallback((node: unknown) => {
     const n = node as GraphNode;
     if (n.kind === "subject") {
+      setSelectedCase(null);
+      setHoveredLink(null);
       setFocusedSubject(prev => prev === n.subject ? null : (n.subject ?? null));
       setTooltip(null);
       return;
     }
-    // Case node — close focus, show tooltip at canvas centre
+    // Case node — toggle selected, clear subject focus
     setFocusedSubject(null);
+    setHoveredLink(null);
+    setSelectedCase(prev => prev === n.caseId ? null : (n.caseId ?? null));
   }, []);
 
   const handleNodeHover = useCallback((node: unknown, _prev: unknown) => {
+    setHoveredLink(null); // clear edge tooltip when hovering a node
     if (!node) { setTooltip(null); return; }
     const n = node as GraphNode;
     const cx = dimensions.width / 2;
     const cy = dimensions.height / 2;
-    // Place tooltip near centre-top to avoid edge clipping
     setTooltip({ node: n, x: cx - 144, y: Math.max(20, cy - 280) });
   }, [dimensions]);
+
+  const handleLinkHover = useCallback((link: unknown, _prev: unknown) => {
+    if (!link) { setHoveredLink(null); return; }
+    const l = link as GraphLink & { source: unknown; target: unknown };
+    const src = l.source as { x?: number; y?: number };
+    const tgt = l.target as { x?: number; y?: number };
+    const mx = ((src.x ?? 0) + (tgt.x ?? 0)) / 2;
+    const my = ((src.y ?? 0) + (tgt.y ?? 0)) / 2;
+    setHoveredLink({ link: l as GraphLink, x: mx, y: my });
+    setTooltip(null); // clear node tooltip when hovering an edge
+  }, []);
 
   // "Fix My Weakness" — first untried/weakest case for the focused subject
   const weakestCase = useMemo(() => {
@@ -211,14 +248,31 @@ export const KnowledgeGraphView: React.FC<KnowledgeGraphViewProps> = ({ onSelect
     const y = n.y ?? 0;
     const r = n.kind === "subject" ? 14 : 5;
     const dimmed = visibleSet !== null && !visibleSet.has(n.id);
+    const isSelected = n.kind === "case" && n.caseId === selectedCase;
+    const isFocused = n.kind === "subject" && n.subject === focusedSubject;
+    const isConnectedSubject = n.kind === "subject" && visibleSet !== null && visibleSet.has(n.id) && selectedCase !== null;
 
-    ctx.globalAlpha = dimmed ? 0.08 : 1;
+    ctx.globalAlpha = dimmed ? 0.05 : 1;
+
+    // Indigo glow ring for case-select mode: selected case + its subject connections
+    if (!dimmed && (isSelected || isConnectedSubject)) {
+      ctx.beginPath();
+      ctx.arc(x, y, r + 6, 0, 2 * Math.PI);
+      ctx.fillStyle = isSelected ? "rgba(139,92,246,0.25)" : "rgba(139,92,246,0.18)";
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(x, y, r + 3, 0, 2 * Math.PI);
+      ctx.fillStyle = isSelected ? "rgba(139,92,246,0.45)" : "rgba(139,92,246,0.25)";
+      ctx.fill();
+    }
 
     if (n.kind === "subject") {
-      // Outer glow ring
+      // Outer accuracy glow ring
       ctx.beginPath();
       ctx.arc(x, y, r + 4, 0, 2 * Math.PI);
-      ctx.fillStyle = n.color.replace(/[\d.]+\)$/, "0.12)");
+      ctx.fillStyle = isFocused
+        ? n.color.replace(/[\d.]+\)$/, "0.3)")   // brighter when focused
+        : n.color.replace(/[\d.]+\)$/, "0.12)");
       ctx.fill();
     }
 
@@ -228,9 +282,18 @@ export const KnowledgeGraphView: React.FC<KnowledgeGraphViewProps> = ({ onSelect
     ctx.fillStyle = n.color;
     ctx.fill();
 
+    // Bright outline ring for focused subject hub
+    if (isFocused) {
+      ctx.beginPath();
+      ctx.arc(x, y, r + 1.5, 0, 2 * Math.PI);
+      ctx.strokeStyle = n.color.replace(/[\d.]+\)$/, "0.9)");
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
     if (n.kind === "subject") {
       // Label below hub
-      ctx.globalAlpha = dimmed ? 0.08 : 0.9;
+      ctx.globalAlpha = dimmed ? 0.05 : 0.9;
       ctx.fillStyle = "#e5e7eb";
       ctx.font = "bold 7px monospace";
       ctx.textAlign = "center";
@@ -240,19 +303,25 @@ export const KnowledgeGraphView: React.FC<KnowledgeGraphViewProps> = ({ onSelect
     }
 
     ctx.globalAlpha = 1;
-  }, [visibleSet]);
+  }, [visibleSet, selectedCase, focusedSubject]);
 
   return (
     <div ref={containerRef} className="relative w-full h-screen bg-[#050505] overflow-hidden">
       <Header completedCount={completedCount} />
 
-      {focusedSubject && (
+      {(focusedSubject || selectedCase) && (
         <div className="absolute top-6 right-6 z-20 flex items-center gap-3">
-          <div className="bg-[#0a0a0b]/80 backdrop-blur border border-[#F27D26]/30 rounded-xl px-4 py-2">
-            <p className="text-[#F27D26] text-xs font-mono uppercase tracking-widest">{focusedSubject}</p>
+          <div className={`bg-[#0a0a0b]/80 backdrop-blur border rounded-xl px-4 py-2 ${
+            selectedCase ? "border-violet-500/30" : "border-[#F27D26]/30"
+          }`}>
+            <p className={`text-xs font-mono uppercase tracking-widest ${
+              selectedCase ? "text-violet-400" : "text-[#F27D26]"
+            }`}>
+              {focusedSubject ?? cases.find(c => c.id === selectedCase)?.episode ?? selectedCase}
+            </p>
           </div>
           <button
-            onClick={() => setFocusedSubject(null)}
+            onClick={() => { setFocusedSubject(null); setSelectedCase(null); }}
             className="p-2 bg-[#151619] border border-[#141414] rounded-lg text-[#8E9299] hover:text-white transition-colors"
           >
             <X className="w-4 h-4" />
@@ -269,17 +338,25 @@ export const KnowledgeGraphView: React.FC<KnowledgeGraphViewProps> = ({ onSelect
         nodeCanvasObject={paintNode}
         nodeCanvasObjectMode={() => "replace"}
         linkColor={(link: unknown) => {
-          const l = link as { color: string; source: unknown; target: unknown };
-          const srcId = typeof l.source === "object" ? (l.source as GraphNode).id : l.source as string;
-          const tgtId = typeof l.target === "object" ? (l.target as GraphNode).id : l.target as string;
-          if (visibleSet && (!visibleSet.has(srcId) || !visibleSet.has(tgtId))) {
-            return "rgba(255,255,255,0.01)";
-          }
+          const l = link as GraphLink & { source: unknown; target: unknown };
+          const srcId = resolveId(l.source);
+          const tgtId = resolveId(l.target);
+          const inVisible = visibleSet !== null && visibleSet.has(srcId) && visibleSet.has(tgtId);
+          if (visibleSet && !inVisible) return "rgba(255,255,255,0.01)";
+          if (inVisible && focusedSubject) return (l.color || "rgba(74,74,74,1)").replace(/[\d.]+\)$/, "0.7)");
+          if (inVisible && selectedCase)  return "rgba(139,92,246,0.7)";
           return l.color || "rgba(255,255,255,0.06)";
         }}
-        linkWidth={0.5}
+        linkWidth={(link: unknown) => {
+          const l = link as GraphLink & { source: unknown; target: unknown };
+          const srcId = resolveId(l.source);
+          const tgtId = resolveId(l.target);
+          if (visibleSet && visibleSet.has(srcId) && visibleSet.has(tgtId)) return 2;
+          return 0.5;
+        }}
         onNodeClick={handleNodeClick}
         onNodeHover={handleNodeHover}
+        onLinkHover={handleLinkHover}
         nodeLabel={() => ""}
         cooldownTicks={120}
         d3AlphaDecay={0.02}
@@ -287,6 +364,21 @@ export const KnowledgeGraphView: React.FC<KnowledgeGraphViewProps> = ({ onSelect
       />
 
       <Legend />
+
+      {/* Edge hover tooltip */}
+      {hoveredLink && (
+        <div
+          className="absolute z-30 pointer-events-none bg-[#0a0a0b]/95 border border-[#F27D26]/25 rounded-lg px-3 py-2 max-w-xs shadow-lg"
+          style={{ left: hoveredLink.x - 120, top: hoveredLink.y - 44 }}
+        >
+          <span className="text-[#F27D26] font-mono text-[10px] font-bold mr-2">
+            {hoveredLink.link.competencyCode}
+          </span>
+          <span className="text-[#8E9299] text-[10px] leading-tight">
+            {hoveredLink.link.competencyText}
+          </span>
+        </div>
+      )}
 
       <AnimatePresence>
         {tooltip && (

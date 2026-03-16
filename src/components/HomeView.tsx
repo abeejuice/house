@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { CaseCard } from './CaseCard';
-import { Case, topInterestingCases, cases } from '../data/cases';
+import { Case, cases } from '../data/cases';
 import { motion } from 'motion/react';
 import { TrendingUp, Activity, Brain, HeartPulse, Stethoscope } from 'lucide-react';
 import { useProgress } from '../context/ProgressContext';
+import { getRecommendedCases } from '../services/graphBuilder';
 
 interface HomeViewProps {
   onSelectCase: (caseData: Case) => void;
@@ -12,7 +13,11 @@ interface HomeViewProps {
 }
 
 export const HomeView: React.FC<HomeViewProps> = ({ onSelectCase, onViewAll }) => {
-  const { stats: progressStats } = useProgress();
+  const { all, stats: progressStats } = useProgress();
+  const { cases: recommended, weakestSubject } = useMemo(
+    () => getRecommendedCases(cases, all),
+    [all]
+  );
   const stats = [
     {
       icon: Activity,
@@ -82,8 +87,16 @@ export const HomeView: React.FC<HomeViewProps> = ({ onSelectCase, onViewAll }) =
       <section>
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <h2 className="text-2xl font-bold text-white">Verified Clinical Modules</h2>
-            <span className="px-2 py-1 bg-emerald-500/10 text-emerald-500 text-[10px] font-mono rounded border border-emerald-500/20 uppercase tracking-widest">High Grade Data</span>
+            <h2 className="text-2xl font-bold text-white">
+              {progressStats.casesAttempted === 0 ? "Start Here" : "Targeted Practice"}
+            </h2>
+            {weakestSubject ? (
+              <span className="px-2 py-1 bg-rose-500/10 text-rose-400 text-[10px] font-mono rounded border border-rose-500/20 uppercase tracking-widest">
+                Weakest: {weakestSubject}
+              </span>
+            ) : (
+              <span className="px-2 py-1 bg-emerald-500/10 text-emerald-500 text-[10px] font-mono rounded border border-emerald-500/20 uppercase tracking-widest">High Grade Data</span>
+            )}
           </div>
           <div className="h-px flex-1 mx-8 bg-[#141414]" />
           <button
@@ -95,7 +108,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onSelectCase, onViewAll }) =
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {topInterestingCases.map((caseData, i) => (
+          {recommended.map((caseData, i) => (
             <motion.div
               key={caseData.id}
               initial={{ opacity: 0, scale: 0.9 }}
