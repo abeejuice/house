@@ -159,7 +159,23 @@ src/
 
 ## Changelog
 
-### v2.9 — Current
+### v3.0 — Current
+
+#### Knowledge Map edge tooltip fix
+
+**Root cause:** The competency tooltip on edge hover used `x`/`y` coordinates from `react-force-graph-2d`'s internal simulation space — a coordinate system that drifts from screen pixels whenever the graph is zoomed or panned. This caused the tooltip to appear at random/wrong positions.
+
+**Fix:** Replaced simulation-coordinate positioning with real-time mouse tracking. A `mousePos` ref is updated on every `mousemove` event on the graph container (using `getBoundingClientRect()` for accurate container-relative coordinates). `handleLinkHover` now reads from this ref instead of computing a graph-space midpoint.
+
+Additional improvements:
+- Tooltip is right-offset from cursor (`x + 14`) rather than centred on an estimated midpoint — it always appears next to where the user is pointing
+- Hard right-edge clamp (`Math.min(x + 14, containerWidth - 264)`) prevents overflow on narrow viewports
+- Competency code and description split onto separate lines for readability
+- Null-guards added: `competencyCode || 'N/A'` and `competencyText || 'No description available'`
+
+---
+
+### v2.9
 
 #### Mobile responsiveness overhaul
 

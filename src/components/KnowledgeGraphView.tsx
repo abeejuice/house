@@ -148,6 +148,7 @@ function resolveId(val: unknown): string {
 export const KnowledgeGraphView: React.FC<KnowledgeGraphViewProps> = ({ onSelectCase }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const fgRef = useRef<ForceGraphMethods | undefined>(undefined);
+  const mousePos = useRef({ x: 0, y: 0 });
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [tooltip, setTooltip] = useState<{ node: GraphNode; x: number; y: number } | null>(null);
   const [focusedSubject, setFocusedSubject] = useState<string | null>(null);
@@ -226,12 +227,8 @@ export const KnowledgeGraphView: React.FC<KnowledgeGraphViewProps> = ({ onSelect
   const handleLinkHover = useCallback((link: unknown, _prev: unknown) => {
     if (!link) { setHoveredLink(null); return; }
     const l = link as GraphLink & { source: unknown; target: unknown };
-    const src = l.source as { x?: number; y?: number };
-    const tgt = l.target as { x?: number; y?: number };
-    const mx = ((src.x ?? 0) + (tgt.x ?? 0)) / 2;
-    const my = ((src.y ?? 0) + (tgt.y ?? 0)) / 2;
-    setHoveredLink({ link: l as GraphLink, x: mx, y: my });
-    setTooltip(null); // clear node tooltip when hovering an edge
+    setHoveredLink({ link: l as GraphLink, x: mousePos.current.x, y: mousePos.current.y });
+    setTooltip(null);
   }, []);
 
   // "Fix My Weakness" — first untried/weakest case for the focused subject
@@ -306,7 +303,18 @@ export const KnowledgeGraphView: React.FC<KnowledgeGraphViewProps> = ({ onSelect
   }, [visibleSet, selectedCase, focusedSubject]);
 
   return (
-    <div ref={containerRef} className="relative w-full h-screen bg-[#050505] overflow-hidden">
+    <div
+      ref={containerRef}
+      className="relative w-full h-screen bg-[#050505] overflow-hidden"
+      onMouseMove={e => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        mousePos.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+        // Keep hoveredLink position live while cursor moves over the edge
+        if (hoveredLink) {
+          setHoveredLink(prev => prev ? { ...prev, x: mousePos.current.x, y: mousePos.current.y } : null);
+        }
+      }}
+    >
       <Header completedCount={completedCount} />
 
       {(focusedSubject || selectedCase) && (
@@ -365,18 +373,22 @@ export const KnowledgeGraphView: React.FC<KnowledgeGraphViewProps> = ({ onSelect
 
       <Legend />
 
-      {/* Edge hover tooltip */}
+      {/* Edge hover tooltip — positioned relative to cursor, clamped to container */}
       {hoveredLink && (
         <div
-          className="absolute z-30 pointer-events-none bg-[#0a0a0b]/95 border border-[#F27D26]/25 rounded-lg px-3 py-2 max-w-xs shadow-lg"
-          style={{ left: hoveredLink.x - 120, top: hoveredLink.y - 44 }}
+          className="absolute z-30 pointer-events-none bg-[#0a0a0b]/95 border border-[#F27D26]/25 rounded-lg px-3 py-2 shadow-lg"
+          style={{
+            left: Math.min(hoveredLink.x + 14, dimensions.width - 264),
+            top: Math.max(hoveredLink.y - 40, 8),
+            maxWidth: 248,
+          }}
         >
-          <span className="text-[#F27D26] font-mono text-[10px] font-bold mr-2">
-            {hoveredLink.link.competencyCode}
-          </span>
-          <span className="text-[#8E9299] text-[10px] leading-tight">
-            {hoveredLink.link.competencyText}
-          </span>
+          <p className="text-[#F27D26] font-mono text-[10px] font-bold mb-0.5">
+            {hoveredLink.link.competencyCode || 'N/A'}
+          </p>
+          <p className="text-[#8E9299] text-[10px] leading-snug">
+            {hoveredLink.link.competencyText || 'No description available'}
+          </p>
         </div>
       )}
 
