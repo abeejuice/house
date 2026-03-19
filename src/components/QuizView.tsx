@@ -93,6 +93,10 @@ const EnhancedResults: React.FC<{
   onClose: () => void;
   onRetake: () => void;
 }> = ({ caseData, answers, questions, onClose, onRetake }) => {
+  useEffect(() => {
+    document.querySelector('main')?.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
   const maxScore = questions.length * 3;
   const earned = answers.reduce((sum, a) => sum + optionPoints(a.selected.type), 0);
   const percentage = maxScore > 0 ? Math.round((earned / maxScore) * 100) : 0;
@@ -247,6 +251,10 @@ const LegacyResults: React.FC<{
   onClose: () => void;
   onRetake: () => void;
 }> = ({ caseData, score, questions, answers, onClose, onRetake }) => {
+  useEffect(() => {
+    document.querySelector('main')?.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
   const percentage = Math.round((score / questions.length) * 100);
   return (
     <motion.div

@@ -172,6 +172,15 @@ export const KnowledgeGraphView: React.FC<KnowledgeGraphViewProps> = ({ onSelect
     return () => obs.disconnect();
   }, []);
 
+  // Zoom to fit once graph physics have settled
+  useEffect(() => {
+    if (!dimensions.width || !fgRef.current) return;
+    const timer = setTimeout(() => {
+      fgRef.current?.zoomToFit(400, 60);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [dimensions.width]);
+
   // Nodes visible in the current focus/selection state
   const visibleSet = useMemo(() => {
     // Mode 1: subject focused — hub + connected case satellites
@@ -205,14 +214,26 @@ export const KnowledgeGraphView: React.FC<KnowledgeGraphViewProps> = ({ onSelect
     if (n.kind === "subject") {
       setSelectedCase(null);
       setHoveredLink(null);
-      setFocusedSubject(prev => prev === n.subject ? null : (n.subject ?? null));
+      setFocusedSubject(prev => {
+        if (prev === n.subject) {
+          fgRef.current?.zoomToFit(400, 60);
+          return null;
+        }
+        return n.subject ?? null;
+      });
       setTooltip(null);
       return;
     }
     // Case node — toggle selected, clear subject focus
     setFocusedSubject(null);
     setHoveredLink(null);
-    setSelectedCase(prev => prev === n.caseId ? null : (n.caseId ?? null));
+    setSelectedCase(prev => {
+      if (prev === n.caseId) {
+        fgRef.current?.zoomToFit(400, 60);
+        return null;
+      }
+      return n.caseId ?? null;
+    });
   }, []);
 
   const handleNodeHover = useCallback((node: unknown, _prev: unknown) => {
@@ -329,7 +350,7 @@ export const KnowledgeGraphView: React.FC<KnowledgeGraphViewProps> = ({ onSelect
             </p>
           </div>
           <button
-            onClick={() => { setFocusedSubject(null); setSelectedCase(null); }}
+            onClick={() => { setFocusedSubject(null); setSelectedCase(null); fgRef.current?.zoomToFit(400, 60); }}
             className="p-2 bg-[#151619] border border-[#141414] rounded-lg text-[#8E9299] hover:text-white transition-colors"
           >
             <X className="w-4 h-4" />

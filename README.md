@@ -159,7 +159,25 @@ src/
 
 ## Changelog
 
-### v3.0 — Current
+### v3.1 — Current
+
+#### Bug fixes — results scroll, Knowledge Map layout & zoom
+
+**Results scroll reset**
+
+The quiz results screen was mounting with the `<main>` container's scroll position carried over from the question screen — leaving the score header (trophy, "Diagnostic Evaluation Complete", correct count, Clinical Reasoning Score, Weighted Accuracy %) hidden above the fold. Both `EnhancedResults` and `LegacyResults` now call `document.querySelector('main')?.scrollTo({ top: 0, behavior: 'instant' })` on mount. `instant` avoids a competing scroll animation fighting the Framer Motion entry transition.
+
+**Knowledge Map — graph centred on load**
+
+The force graph was rendering offset to the right half of the canvas due to the D3 simulation initialising nodes at the origin before the container measured. Fixed by calling `fgRef.current?.zoomToFit(400, 60)` 500ms after the container has measured (allowing the `cooldownTicks={120}` physics to settle). The effect depends on `dimensions.width` so it also re-fires correctly on window resize.
+
+**Knowledge Map — zoom resets on panel close**
+
+Clicking a node zooms the graph in on that cluster. Previously, closing the detail panel (via the × button or re-clicking the selected node) left the graph locked at the zoomed-in view. The close button and both deselect paths in `handleNodeClick` now call `zoomToFit(400, 60)` to animate back to the full graph view.
+
+---
+
+### v3.0
 
 #### Knowledge Map edge tooltip fix
 
