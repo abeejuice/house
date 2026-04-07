@@ -85,7 +85,14 @@ export default function App() {
             <Menu className="w-5 h-5" />
           </button>
           <span className="text-sm font-bold text-white tracking-tighter flex items-center gap-2">
-            <img src="/galen-icon.svg" className="w-5 h-5 rounded" alt="GalenAI" />
+            <a
+              href="https://app.galenai.io/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="opacity-90 hover:opacity-100 transition-opacity"
+            >
+              <img src="/galen-icon.svg" className="w-5 h-5 rounded" alt="GalenAI" />
+            </a>
             IT'S NOT LUPUS
           </span>
         </div>

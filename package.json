@@ -1,7 +1,7 @@
 {
   "name": "react-example",
   "private": true,
-  "version": "0.0.0",
+  "version": "3.3.0",
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
@@ -10,11 +10,16 @@
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
     "generate:competency-map": "tsx scripts/generate-competency-map.ts",
-    "generate:enhanced-quizzes": "tsx scripts/generate-enhanced-quizzes.ts"
+    "generate:enhanced-quizzes": "tsx scripts/generate-enhanced-quizzes.ts",
+    "video:dev": "npx remotion studio src/video/index.ts",
+    "video:render": "npx remotion render src/video/index.ts HouseMDVideo out/house_md_promo.mp4",
+    "video:render:vertical": "npx remotion render src/video/index.ts HouseMDVideoVertical out/house_md_promo_vertical.mp4",
+    "video:voiceover": "tsx scripts/generate-voiceover.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",
     "@google/genai": "^1.29.0",
+    "@remotion/cli": "^4.0.436",
     "@tailwindcss/vite": "^4.1.14",
     "@types/xml2js": "^0.4.14",
     "@vitejs/plugin-react": "^5.0.4",
@@ -23,9 +28,11 @@
     "express": "^4.21.2",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
+    "openai": "^6.32.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-force-graph-2d": "^1.29.1",
+    "remotion": "^4.0.436",
     "vite": "^6.2.0",
     "xml2js": "^0.6.2"
   },

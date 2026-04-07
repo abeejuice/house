@@ -10,6 +10,7 @@ import { getEnhancedQuizForCase, getQuizForCase, QuizQuestion, QuizOption } from
 import { EnhancedQuizQuestion, EnhancedQuizOption, DISTANCE_COLOR } from '../data/quizzes';
 import { NMCCompetencies } from './NMCCompetencies';
 import { useProgress } from '../context/ProgressContext';
+import { GalenAIButton } from './GalenAIButton';
 
 interface QuizViewProps {
   caseData: Case;
@@ -175,6 +176,13 @@ const EnhancedResults: React.FC<{
           >
             <RotateCcw className="w-5 h-5" /> Retake
           </button>
+        </div>
+
+        <div className="mt-8 pt-8 border-t border-[#1e2130] flex flex-col items-center gap-3">
+          <p className="text-[10px] font-mono text-[#4A4A4A] uppercase tracking-widest">
+            Powered by GalenAI
+          </p>
+          <GalenAIButton size="lg" />
         </div>
       </div>
 

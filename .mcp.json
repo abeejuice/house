@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "code-review-graph": {
+      "command": "/Users/apple/.local/bin/code-review-graph",
+      "args": ["serve"],
+      "type": "stdio"
+    }
+  }
+}

@@ -7,6 +7,7 @@ import { TrendingUp, Activity, Brain, ChevronRight } from 'lucide-react';
 import { useProgress } from '../context/ProgressContext';
 import { getRecommendedCases } from '../services/graphBuilder';
 import { houseQuotes, getAccuracyRange } from '../data/houseQuotes';
+import { GalenAIButton } from './GalenAIButton';
 
 interface HomeViewProps {
   onSelectCase: (caseData: Case) => void;
@@ -213,17 +214,22 @@ export const HomeView: React.FC<HomeViewProps> = ({ onSelectCase, onViewAll }) =
 
   return (
     <div className="p-4 sm:p-6 md:p-8 lg:p-12 max-w-7xl mx-auto">
-      <header className="mb-16">
-        <div className="flex items-center gap-2 mb-4">
-          <TrendingUp className="w-4 h-4 text-[#F27D26]" />
-          <span className="text-[10px] font-mono text-[#F27D26] uppercase tracking-widest">Diagnostic Dashboard</span>
+      <header className="mb-16 flex items-start justify-between gap-6">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingUp className="w-4 h-4 text-[#F27D26]" />
+            <span className="text-[10px] font-mono text-[#F27D26] uppercase tracking-widest">Diagnostic Dashboard</span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white tracking-tighter mb-6">
+            Welcome back, <span className="text-[#F27D26]">Fellow.</span>
+          </h1>
+          <p className="text-[#8E9299] text-xl max-w-2xl leading-relaxed">
+            Select a case to begin your diagnostic evaluation. Remember: everybody lies, but the symptoms don't.
+          </p>
         </div>
-        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white tracking-tighter mb-6">
-          Welcome back, <span className="text-[#F27D26]">Fellow.</span>
-        </h1>
-        <p className="text-[#8E9299] text-xl max-w-2xl leading-relaxed">
-          Select a case to begin your diagnostic evaluation. Remember: everybody lies, but the symptoms don't.
-        </p>
+        <div className="flex-shrink-0 pt-1">
+          <GalenAIButton size="md" />
+        </div>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">

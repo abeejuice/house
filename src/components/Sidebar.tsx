@@ -37,7 +37,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="p-8 flex items-start justify-between" onClick={onGoHome} style={{ cursor: 'pointer' }}>
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tighter flex items-center gap-2">
-            <img src="/galen-icon.svg" className="w-8 h-8 rounded" alt="GalenAI" onClick={e => { e.stopPropagation(); onGoHome(); onClose(); }} />
+            <a
+              href="https://app.galenai.io/"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={e => e.stopPropagation()}
+              className="opacity-90 hover:opacity-100 transition-opacity"
+            >
+              <img src="/galen-icon.svg" className="w-8 h-8 rounded" alt="GalenAI" />
+            </a>
             IT'S NOT LUPUS
           </h1>
           <p className="text-[10px] font-mono text-[#8E9299] mt-1 tracking-[0.2em] uppercase">
@@ -97,7 +105,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </nav>
 
       <div className="p-4 border-t border-[#141414] flex items-center justify-center">
-        <img src="/galen-wordmark.svg" className="h-5 opacity-60" alt="GalenAI" />
+        <a
+          href="https://app.galenai.io/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="opacity-60 hover:opacity-100 transition-opacity"
+        >
+          <img src="/galen-wordmark.svg" className="h-5" alt="GalenAI" />
+        </a>
       </div>
     </div>
   );
